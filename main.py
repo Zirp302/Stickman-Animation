@@ -1,3 +1,4 @@
+from math import sin, cos
 import pyglet
 from pyglet.window import key
 from pyglet import shapes as sh
@@ -42,7 +43,7 @@ keyboard = {
     }
 
 # Все точки
-point = {
+points = {
     'A': sh.Circle(xy['A']['x'], xy['A']['y'], 10, color=(255, 255, 255), batch=pak, group=group3),
     'B': sh.Circle(xy['B']['x'], xy['B']['y'], 10, color=(255, 255, 255), batch=pak, group=group3),
     'C': sh.Circle(xy['C']['x'], xy['C']['y'], 10, color=(255, 255, 255), batch=pak, group=group3),
@@ -90,9 +91,12 @@ line = {
 # Круг для создания головы и чёрной дырки в ней
 head = sh.Circle(xy['E']['x'], xy['E']['y'] + 80, 80, color=(133, 133, 133), batch=pak, group=group0)
 head_hole = sh.Circle(head.x, head.y, 60, color=(0, 0, 0), batch=pak, group=group1)
+# Угол наклона головы
+ugl_head_pi = 157080
 
-
+# Ключ для texts и points
 keys = 'A'
+# Показатель передвигаемой точки
 text_key = pyglet.text.Label('A', 20, 540, font_size=40, color=(255, 255, 255), batch=pak)
 
 
@@ -100,6 +104,7 @@ text_key = pyglet.text.Label('A', 20, 540, font_size=40, color=(255, 255, 255), 
 def on_key_press(symbol, modifiers):
     global keys, keyboard
 
+    # Переопределение ключа под одну из передвигаемых точек
     if symbol in keyboard:
         keys = keyboard[symbol]
         text_key.text = keys
@@ -107,13 +112,13 @@ def on_key_press(symbol, modifiers):
 
 @wind.event
 def on_mouse_press(x, y, button, modifiers):
-    global xy, keys, line, point, texts, head, head_hole
+    global xy, keys, line, points, texts, head, head_hole
 
     xy[keys]['x'] = x
     xy[keys]['y'] = y
 
-    point[keys].x = x
-    point[keys].y = y
+    points[keys].x = x
+    points[keys].y = y
 
     texts[keys].x = x - (texts[keys].content_width // 2)
     texts[keys].y = y - 5
@@ -130,13 +135,26 @@ def on_mouse_press(x, y, button, modifiers):
             line[i].x2 = xy[key_2]['x']
             line[i].y2 = xy[key_2]['y']
 
-    head.x = xy['E']['x']
-    head.y = xy['E']['y'] + head.radius
+    head.x = round(xy['E']['x'] + head.radius * cos(ugl_head_pi / 100000), 3)
+    head.y = round(xy['E']['y'] + head.radius * sin(ugl_head_pi / 100000), 3)
     head_hole.x = head.x
     head_hole.y = head.y 
 
 
+@wind.event
+def on_mouse_scroll(x, y, scroll_x, scroll_y):
+    global xy, head, head_hole, ugl_head_pi
+    
+    ugl_head_pi += 31416 * scroll_y
+    if ugl_head_pi > 628318 or ugl_head_pi < -628318:
+        ugl_head_pi = 0
 
+    head.x = round(xy['E']['x'] + head.radius * cos(ugl_head_pi / 100000), 3)
+    head.y = round(xy['E']['y'] + head.radius * sin(ugl_head_pi / 100000), 3)
+    head_hole.x = head.x
+    head_hole.y = head.y 
+
+# Отрисовка 
 @wind.event
 def on_draw():
     wind.clear()
