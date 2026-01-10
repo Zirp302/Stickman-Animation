@@ -1,9 +1,10 @@
+from video import *
 from math import sin, cos
 import pyglet
 from pyglet.window import key
 from pyglet import shapes as sh
 
-wind = pyglet.window.Window(720, 600)
+wind = pyglet.window.Window(720, 600, resizable=True)
 pak = pyglet.graphics.Batch() 
 
 group0 = pyglet.graphics.Group(0)
@@ -100,25 +101,46 @@ ugl_head_pi = 157080
 # Ключ для texts и points
 keys = 'A'
 # Показатель передвигаемой точки
-text_key = pyglet.text.Label('A', 20, 540, font_size=40, color=(255, 255, 255), batch=pak, group=group4)
+text_key = pyglet.text.Label('A', 10, 10, font_size=40, color=(255, 255, 255), batch=pak, group=group4)
 head_size = False
 head_thickness = False
+img_name = 1
+
+kador = Kador(wind)
 
 @wind.event
 def on_key_press(symbol, modifiers):
     global keys, keyboard, head_size, head_thickness, ugl_head_pi
     global xy, texts, points, line, xy_del
+    global img_name, kador
 
     # Переопределение ключа под одну из передвигаемых точек
     if symbol in keyboard:
         keys = keyboard[symbol]
         text_key.text = keys
+
     # Проверка нажатия на Shift
     elif symbol == key.LSHIFT or symbol == key.RSHIFT:
         head_size = True
+
     # Проверка нажатия на Ctrl
     elif symbol == key.LCTRL or symbol == key.RCTRL:
         head_thickness = True
+    
+    
+    elif symbol == key.P:
+        kador.screen()
+        # kador.video(img_name)
+        img = kador.img
+        
+        img.save(str(img_name) + '.png')
+        img_name += 1
+    
+    # Воспроизводство анимации
+    elif symbol == key.O:
+        kador.video()
+        kador.vid.batch = pak
+
     # Проверка нажатия на клавиши удаления
     elif symbol == key.DELETE or symbol == key.BACKSPACE:
         # Сбрасывет все координыаты до изначальных
@@ -133,13 +155,12 @@ def on_key_press(symbol, modifiers):
             line[key_line].y2 = xy[key_line[1]]['y']
         
         # Возвращает все точки и текст на изначальные позиции
-        for i in points:
-            points[i].x = xy[i]['x']
-            points[i].y = xy[i]['y']
+        for k in points:
+            points[k].x = xy[k]['x']
+            points[k].y = xy[k]['y']
 
-            texts[i].x = xy[i]['x'] - texts[i].content_width // 2
-            texts[i].y = xy[i]['y'] - 5
-            print(i, texts[i].content_width // 2)
+            texts[k].x = xy[k]['x'] - texts[k].content_width // 2
+            texts[k].y = xy[k]['y'] - 5
         
         head.radius = 80
         head_hole.radius = 60
@@ -152,7 +173,6 @@ def on_key_press(symbol, modifiers):
         head_hole.y = head.y
         
 
-            
 
 
 @wind.event
@@ -162,10 +182,14 @@ def on_key_release(symbol, modifiers):
     # Проверка отжатия Shift
     if symbol == key.LSHIFT or symbol == key.RSHIFT:
         head_size = False
+
     # Проверка отжатия Ctrl
     elif symbol == key.LCTRL or symbol == key.RCTRL:
         head_thickness = False
 
+    # Окончание воспроизваодства анимации
+    elif symbol == key.O:
+        kador.vid.batch = None
 
 @wind.event
 def on_mouse_press(x, y, button, modifiers):
@@ -223,11 +247,12 @@ def on_mouse_scroll(x, y, scroll_x, scroll_y):
     head_hole.y = head.y 
 
 
-
 # Отрисовка 
 @wind.event
 def on_draw():
     wind.clear()
     pak.draw()
+
+
 
 pyglet.app.run()
